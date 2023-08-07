@@ -9,38 +9,63 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        // absolute positioning
-        Text("Hello, world!")
-            .position(x: 100, y: 100)
+        // take 90% of all available width regardless of content
+        GeometryReader { geo in
+            Text("Hello, world!")
+                .frame(width: geo.size.width * 0.9)
+                .background(.red)
+        }
         
-        // red background tightly fits
-        Text("Hello, world!")
+        // Side effect: the view that gets returned has a flexible preferred size;
+        // meaning it will expand to take up more space as needed
+        VStack {
+            GeometryReader { geo in
+                Text("Hello, world!")
+                    .frame(width: geo.size.width * 0.9, height: 40)
+                    .background(.red)
+            }
+            // this green bg shows us just how big it is
+            // note: preferred size, NOT absolute
+            .background(.green)
+            
+            // gets pushed to the bottom
+            Text("More text")
+                .background(.blue)
+        }
+        
+        OuterView()
             .background(.red)
-            .position(x: 100, y: 100)
-        
-        // position provides new view that takes all available space
-        Text("Hello, world!")
-            .position(x: 100, y: 100)
-            .background(.red)
-        
-        // remember the 3-step layout process of SwiftUI
-        // 1. Parent view proposes a size for its child
-        // 2. Child chooses its size, parent must respect choice
-        // 3. Parent positions child in its coordinate space
-        
-        // the .offset() modifier changes the location
-        // of where a view should be rendered,
-        // but does NOT actually change its underlying geometry
-        // .background() uses the orginal position of text, NOT the offset
-        Text("Hello, world!")
-            .offset(x: 100, y: 100)
-            .background(.red)
-        
-        // this might be more what you'd expect,
-        // illustrating MODIFIER ORDER MATTERS
-        Text("Hello, world!")
-            .background(.red)
-            .offset(x: 100, y: 100)
+            .coordinateSpace(name: "Custom")
+    }
+}
+
+struct OuterView: View {
+    var body: some View {
+        VStack {
+            Text("Top")
+            InnerView()
+                .background(.green)
+            Text("Bottom")
+        }
+    }
+}
+
+struct InnerView: View {
+    var body: some View {
+        HStack {
+            Text("Left")
+            GeometryReader { geo in
+                Text("Center")
+                    .background(.blue)
+                    .onTapGesture {
+                        print("Global center: \(geo.frame(in: .global).midX) x \(geo.frame(in: .global).midY)")
+                        print("Custom center: \(geo.frame(in: .named("Custom")).midX) x \(geo.frame(in: .named("Custom")).midY)")
+                        print("Local center: \(geo.frame(in: .local).midX) x \(geo.frame(in: .local).midY)")
+                    }
+            }
+            .background(.orange)
+            Text("Right")
+        }
     }
 }
 
